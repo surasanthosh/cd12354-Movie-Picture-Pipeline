@@ -1,6 +1,7 @@
 FROM python:3.10-slim
 
 ENV FLASK_RUN_HOST=0.0.0.0
+ENV FLASK_RUN_PORT=5000
 
 WORKDIR /app
 
@@ -23,13 +24,13 @@ RUN useradd --create-home --shell /bin/bash app
 RUN mkdir -p /var/www/app /app && \
     chown -R app:app /var/www/app /app
 
-# Copy dependency files first for Docker layer caching
+# Copy dependency files
 COPY Pipfile Pipfile.lock /app/
 
-# Install dependencies from Pipfile.lock
-RUN cd /app && pipenv install --system --deploy
+# Install dependencies
+RUN pipenv install --system --deploy
 
-# Copy application source
+# Copy application
 COPY . /app
 
 # Change ownership
@@ -38,5 +39,5 @@ RUN chown -R app:app /app /var/www/app
 # Run as non-root user
 USER app
 
-# Start uWSGI
-CMD ["uwsgi", "--http", ":5000", "--master", "--enable-threads", "-s", "/var/www/app/app.sock", "--manage-script-name", "--mount", "/=app:app"]
+# Start Flask application with uWSGI
+CMD ["uwsgi", "--http", ":5000", "--master", "--enable-threads", "--module", "__init__:app"]

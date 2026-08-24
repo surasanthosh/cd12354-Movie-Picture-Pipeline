@@ -150,6 +150,10 @@ resource "aws_eks_cluster" "main" {
     endpoint_private_access = true
   }
   depends_on = [aws_iam_role_policy_attachment.eks_cluster, aws_iam_role_policy_attachment.eks_service]
+
+  lifecycle {
+    ignore_changes = [vpc_config]
+  }
 }
 
 
@@ -186,18 +190,12 @@ resource "aws_iam_role_policy_attachment" "eks_service" {
 ##################
 # EKS Node Group
 ##################
-# Track latest release for the given k8s version
-data "aws_ssm_parameter" "eks_ami_release_version" {
-  name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.main.version}/amazon-linux-2/recommended/release_version"
-}
-
 resource "aws_eks_node_group" "main" {
   node_group_name = "udacity"
   cluster_name    = aws_eks_cluster.main.name
   version         = aws_eks_cluster.main.version
   node_role_arn   = aws_iam_role.node_group.arn
   subnet_ids      = [var.enable_private == true ? aws_subnet.private_subnet.id : aws_subnet.public_subnet.id]
-  release_version = nonsensitive(data.aws_ssm_parameter.eks_ami_release_version.value)
   instance_types  = ["t3.small"]
 
   scaling_config {
@@ -216,7 +214,7 @@ resource "aws_eks_node_group" "main" {
   ]
 
   lifecycle {
-    ignore_changes = [scaling_config.0.desired_size]
+    ignore_changes = [scaling_config.0.desired_size, subnet_ids]
   }
 }
 
@@ -252,40 +250,8 @@ data "aws_iam_policy_document" "assume_role_policy" {
   }
 }
 
-######################
-# CodeBuild Resources
-######################
-# Create a CodeBuild project
-resource "aws_codebuild_project" "codebuild" {
-  name          = "udacity"
-  description   = "Udacity CodeBuild project"
-  service_role  = aws_iam_role.codebuild.arn
-  build_timeout = 60
-  artifacts {
-    type = "NO_ARTIFACTS"
-  }
-
-  environment {
-    compute_type                = "BUILD_GENERAL1_SMALL"
-    image                       = "aws/codebuild/standard:5.0"
-    type                        = "LINUX_CONTAINER"
-    image_pull_credentials_type = "CODEBUILD"
-    privileged_mode             = true
-  }
-
-  source {
-    type            = "GITHUB"
-    location        = "https://github.com/your-org/your-repo"
-    git_clone_depth = 1
-    buildspec       = "buildspec.yml"
-  }
-
-  cache {
-    type = "NO_CACHE"
-  }
-}
-
-# Create the Codebuild Role
+# Existing infrastructure includes this role, but CodeBuild is not required by
+# the project; GitHub Actions performs CI/CD and deployment.
 resource "aws_iam_role" "codebuild" {
   name = "codebuild-role"
 
@@ -301,12 +267,6 @@ resource "aws_iam_role" "codebuild" {
       }
     ]
   })
-}
-
-# Attach the IAM policy to the codebuild role
-resource "aws_iam_role_policy_attachment" "codebuild" {
-  policy_arn = "arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess"
-  role       = aws_iam_role.codebuild.name
 }
 
 ####################
