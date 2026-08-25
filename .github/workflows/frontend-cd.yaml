@@ -82,3 +82,5 @@ jobs:
         run: |
           kustomize edit set image frontend="$ECR_REPOSITORY:$GITHUB_SHA"
           kustomize build . | kubectl apply -f -
+          kubectl rollout status deployment/frontend --timeout=300s
+          kubectl wait --for=jsonpath='{.status.loadBalancer.ingress[0].hostname}' service/frontend --timeout=300s

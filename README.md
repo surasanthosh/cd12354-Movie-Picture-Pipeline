@@ -1,5 +1,26 @@
 # Movie Picture Pipeline
 
+## Project Submission
+
+GitHub Repository: https://github.com/surasanthosh/cd12354-Movie-Picture-Pipeline
+
+Backend URL: Pending verified EKS deployment
+
+Frontend URL: Pending verified EKS deployment
+
+GitHub Actions:
+
+- Backend CI: successful run [32695735603](https://github.com/surasanthosh/cd12354-Movie-Picture-Pipeline/actions/runs/32695735603)
+- Frontend CI: successful run [32693217746](https://github.com/surasanthosh/cd12354-Movie-Picture-Pipeline/actions/runs/32693217746)
+- Backend CD: Pending successful run after deployment credentials and AWS access are restored
+- Frontend CD: Pending successful run after backend deployment is verified
+
+Kubernetes:
+
+- EKS cluster: `cluster`
+- Region: `us-east-1`
+- Pod, deployment, and service evidence: Pending verified cluster access
+
 You've been brought on as the DevOps resource for a development team that manages a web application that is a catalog of Movie Picture movies. They're in dire need of automating their development workflows in hopes of accelerating their release cycle. They'd like to use Github Actions to automate testing, building and deploying their applications to an existing Kubernetes cluster.
 
 The team's project is comprised of 2 applications.
